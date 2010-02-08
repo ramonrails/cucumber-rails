@@ -38,6 +38,7 @@ class CucumberGenerator < Rails::Generator::Base
 
       m.directory 'features/step_definitions'
       m.template "step_definitions/#{driver}_steps.rb.erb", 'features/step_definitions/web_steps.rb'
+      m.template "step_definitions/#{driver}_general_steps.rb.erb", 'features/step_definitions/web_general_steps.rb' # ramonrails
       if language != 'en'
         m.template "step_definitions/web_steps_#{language}.rb.erb", "features/step_definitions/web_steps_#{language}.rb"
       end

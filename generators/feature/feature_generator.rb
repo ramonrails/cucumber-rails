@@ -4,11 +4,15 @@ class FeatureGenerator < Rails::Generator::NamedBase
     record do |m|
       m.directory 'features/step_definitions'
       m.template  'feature.erb', "features/manage_#{plural_name}.feature"
-      m.template  'steps.erb', "features/step_definitions/#{singular_name}_steps.rb"
 
-      m.gsub_file 'features/support/paths.rb', /'\/'/mi do |match|
-        "#{match}\n    when /the new #{singular_name} page/\n      new_#{singular_name}_path\n"
-      end
+      # ramonrails: after webrat_general_steps, this steps file and path are not required. DRY?
+      #   Also modified feature.rb template to say "I am creating..." instead of "I am on the new ... page"
+      #
+      # m.template  'steps.erb', "features/step_definitions/#{singular_name}_steps.rb"
+
+      # m.gsub_file 'features/support/paths.rb', /'\/'/mi do |match|
+      #   "#{match}\n    when /the new #{singular_name} page/\n      new_#{singular_name}_path\n"
+      # end
     end
   end
 

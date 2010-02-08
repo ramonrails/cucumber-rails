@@ -1,0 +1,124 @@
+<%= embed_file('support/edit_warning.txt') %>
+
+require 'uri'
+require File.expand_path(File.join(File.dirname(__FILE__), "..", "support", "paths"))
+
+# Commonly used webrat steps
+# http://github.com/brynary/webrat
+
+# some general DRY steps
+# http://github.com/ramonrails/cucumber-rails
+
+# Given
+
+# logout
+#
+Given /^I am (guest|public user|not authenticated)$/ do |user_type|
+  visit logout_url
+end
+
+# model data as table.
+# Given the following contacts:
+#   | Name | Age |
+#   | Mr X |  20 |
+#   | Mr Y |  32 |
+#
+Given /^the following (.+):$/ do |name, table|
+  model = if name.include?(' ')
+    name.singularize.split(' ').collect(&:capitalize).join.constantize
+  else
+    name.singularize.capitalize.constantize
+  end
+  model.delete_all
+  model.create!(table.hashes)
+end
+
+# add, edit action generalized
+# example:
+#   Given I am creating a contact
+#   Given I am editing an account
+#
+Given /^I am (creating|editing) (?:|a|an) (.+)$/ do |action, model|
+  list_path = model.downcase.pluralize.gsub(' ','_')
+  model_sym = model.downcase.singularize.gsub(' ', '_').to_sym
+  action_path = case action
+    when "creating"
+      "/#{list_path}/new"
+    when "editing"
+      model = model_sym.singularize.split(' ').collect(&:capitalize).join.constantize.find(:first)
+      "/#{list_path}/(#{model.id})/edit"
+  end
+  visit "#{action_path}"
+end
+
+# list view
+# example: Given I am listing acounts payable
+#
+Given /^I am listing (.+)$/ do |model|
+  visit "/#{model.downcase.pluralize.gsub(' ','_')}"
+end
+
+# When
+
+# edit, delete, show
+# example:
+#   (a) When I edit the 2nd invoice
+#
+#   (b) When I visit "/invoices"
+#       And I edit the 2nd row
+#
+When /^I (edit|delete|show) the (\d+)(?:st|nd|rd|th) (.+)$/ do |action, pos, model_name|
+  action_text = (action == "delete" ? "Destroy" : "#{action.capitalize}")
+  visit "/#{model_name.downcase.pluralize.gsub(' ','_')}" if model_name != 'row'
+  within("table tr:nth-child(#{pos.to_i+1})") do
+    click_link action_text
+  end
+end
+
+# visit a path
+# example: When I visit "/dealers"
+#
+When /^(?:|I )visit "([^\"]*)"$/ do |path|
+  visit path
+end
+
+# Then
+
+# diff with table
+# example:
+#   Then I should see the following contacts:
+#     | Name | Age |
+#     | Mr X |  20 |
+#     | Mr Y |  32 |
+#
+Then /^I should see the following (.+):$/ do |model, expected_table|
+  expected_table.diff!(tableish('table tr', 'td,th'))
+end
+
+# multiple phrases in page content. use to shorten "Then I should see 'this_text'"
+# example:
+#   Then page content should have "this, that, and this also"
+#
+Then /^(?:|page )content should have "([^\"]*)"$/ do |array_as_text|
+  contents = array_as_text.split(',').collect {|p| p.lstrip.rstrip}
+  if defined?(Spec::Rails::Matchers)
+    contents.each {|text| response.should contain(text)}
+  else
+    contents.each {|text| assert_contain text}
+  end
+end
+
+# multiple phrases in page content. use to shorten "Then I should not see 'this_text'"
+# example:
+#   Then page content should not have "this, that, and this also"
+#
+Then /^(?:|page )content should not have "([^\"]*)"$/ do |array_as_text|
+  contents = array_as_text.split(',').collect {|p| p.lstrip.rstrip}
+  if defined?(Spec::Rails::Matchers)
+    contents.each {|text| response.should_not contain(text)}
+  else
+    contents.each {|text| assert_not_contain text}
+  end
+end
+
+# end of steps .... ramonrails

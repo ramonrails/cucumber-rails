@@ -4,7 +4,7 @@ Feature: Manage <%= plural_name %>
   wants [behaviour]
   
   Scenario: Register new <%= singular_name %>
-    Given I am on the new <%= singular_name %> page
+    Given I am creating <%= singular_name %>
 <% keyword = 'When' -%>
 <% named_args.each do |arg| -%>
 <% if arg.type == 'boolean' -%>
@@ -15,11 +15,12 @@ Feature: Manage <%= plural_name %>
 <% keyword = 'And' -%>
 <% end -%>
     And I press "Create"
-<% keyword = 'Then' -%>
-<% named_args.each do |arg| -%>
-    <%= keyword %> I should see "<%= arg.value(1) %>"
-<% keyword = 'And' -%>
-<% end -%>
+    Then page content should have "<%= named_args.collect {|arg| arg.value(1) }.join(',') %>"
+# <% keyword = 'Then' -%>
+# <% named_args.each do |arg| -%>
+#     <%= keyword %> I should see "<%= arg.value(1) %>"
+# <% keyword = 'And' -%>
+# <% end -%>
 
 <% if IO.read('features/support/env.rb') =~ /capybara/n -%>
   # Rails generates Delete links that use Javascript to pop up a confirmation
